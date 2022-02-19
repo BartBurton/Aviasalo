@@ -7,6 +7,7 @@ use App\Http\Resources\TicketResource;
 use App\Models\Maker;
 use Illuminate\Http\Request;
 use App\Exceptions\TokenGenerator;
+use App\Models\TicketPassanger;
 
 class TicketController extends Controller
 {
@@ -36,6 +37,11 @@ class TicketController extends Controller
 
         return $allowed;
     }
+
+    public function passangers($id) {
+        return TicketPassanger::all()->where('ticket_id', '=', $id);
+    }
+
     public function cities()
     {
         $tkts = TicketResource::collection(Ticket::all());

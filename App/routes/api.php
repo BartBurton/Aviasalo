@@ -31,7 +31,7 @@ Route::post('/Authenticate/IsAdmin', [AuthenticateController::class, 'isAdmin'])
 
 //User methods
 Route::post('/Passanger/Create', [PassangerController::class, 'create']);
-Route::get('/Passanger/SignIn/{email}/{password}', [PassangerController::class, 'signIn']);
+Route::get('/Passanger/SignIn/{email}/{password}', [SignInController::class, 'signInUser']);
 
 Route::middleware([UserMiddlware::class])->group(function () {
     Route::get('/Passanger/Get', [PassangerController::class, 'get']);
@@ -50,19 +50,24 @@ Route::post('/Booking/Confirm', [BookingController::class, 'confirm']);
 
 
 //Private methods
-Route::get('/Maker/SignIn/{name}/{password}', [SignInController::class, 'signIn']);
+Route::get('/Maker/SignIn/{name}/{password}', [SignInController::class, 'signInMaker']);
 
 Route::middleware([PrivateMiddleware::class])->group(function () {
     Route::get('/Admin/Get', [AdminController::class, 'get']);
 
     Route::get('/Aircompany/All', [AircompanyController::class, 'all']);
     Route::get('/Aircompany/Get/{id}', [AircompanyController::class, 'get']);
+    Route::post('/Aircompany/Create', [AircompanyController::class, 'create']);
+    Route::post('/Aircompany/LoadLogo/{id}', [AircompanyController::class, 'loadLogo']);
+    Route::post('/Aircompany/Update/{id}', [AircompanyController::class, 'update']);
+    Route::post('/Aircompany/Delete/{id}', [AircompanyController::class, 'delete']);
 
     Route::get('/Ticket/All', [TicketController::class, 'all']);
     Route::get('/Ticket/Get/{id}', [TicketController::class, 'get']);
     Route::post('/Ticket/Create', [TicketController::class, 'create']);
     Route::post('/Ticket/LoadPreview/{id}', [TicketController::class, 'loadPreview']);
     Route::post('/Ticket/Update/{id}', [TicketController::class, 'update']);
+    Route::post('/Ticket/Delete/{id}', [TicketController::class, 'delete']);
 
     Route::get('/Segment/All', [SegmentController::class, 'all']);
     Route::get('/Segment/Get/{id}', [SegmentController::class, 'get']);
@@ -74,6 +79,8 @@ Route::middleware([PrivateMiddleware::class])->group(function () {
 
 
 //Admin methods
+Route::get('/Admin/SignIn/{name}/{password}', [SignInController::class, 'signInAdmin']);
+
 Route::middleware([AdminMiddleware::class])->group(function () {
     Route::get('/Admin/AllMakers', [AdminController::class, 'allMakers']);
     Route::get('/Admin/GetMaker/{id}', [AdminController::class, 'getMaker']);
@@ -85,12 +92,6 @@ Route::middleware([AdminMiddleware::class])->group(function () {
     Route::get('/Admin/GetPassanger/{id}', [AdminController::class, 'getPassanger']);
     Route::post('/Admin/UpdatePassanger/{id}', [AdminController::class, 'updatePassanger']);
     Route::post('/Admin/DeletePassanger/{id}', [AdminController::class, 'deletePassanger']);
-
-
-    Route::post('/Aircompany/Create', [AircompanyController::class, 'create']);
-    Route::post('/Aircompany/LoadLogo/{id}', [AircompanyController::class, 'loadLogo']);
-    Route::post('/Aircompany/Update/{id}', [AircompanyController::class, 'update']);
-    Route::post('/Aircompany/Delete/{id}', [AircompanyController::class, 'delete']);
-
-    Route::post('/Ticket/Delete/{id}', [TicketController::class, 'delete']);
+    
+    Route::get('/Ticket/Passangers/{id}', [TicketController::class, 'passangers']);
 });

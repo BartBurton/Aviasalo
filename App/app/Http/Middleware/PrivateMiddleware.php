@@ -13,8 +13,10 @@ class PrivateMiddleware
         $token = $request->header('Authorization');
         $mkr = Maker::where('remember_token', '=', $token)->first();
 
-        if(!$mkr || !$mkr->is_active){
+        if (!$mkr) {
             return response('Unauthorized', 401);
+        } else if (!$mkr->is_active) {
+            return response('Not acceptable', 406);
         }
 
         return $next($request);

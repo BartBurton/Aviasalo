@@ -1,14 +1,5 @@
 <template>
   <div>
-    <input
-      @change="arcFileUpload()"
-      type="file"
-      id="arcFile"
-      ref="arcFile"
-      style="display: none"
-      accept="image/png, image/jpeg"
-    />
-
     <v-row>
       <v-col class="text-right">
         <v-btn
@@ -17,7 +8,7 @@
           fab
           @click="
             doViaCheckAccess(() => {
-              addArc();
+              addMkr();
             })
           "
           ><v-icon>mdi-plus</v-icon></v-btn
@@ -25,57 +16,68 @@
       </v-col>
     </v-row>
 
-    <v-row v-for="(arc, i) in aircompanies" :key="`arc-${i}`">
+    <v-row v-for="(mkr, i) in makers" :key="`mkr-${i}`">
       <v-col>
         <v-card :class="i % 2 == 0 ? 'item0' : 'item1'" class="pa-2">
           <v-card-title>
             <v-row align="center">
-              <v-col cols="2">
-                <v-hover v-slot="{ hover }">
-                  <v-img
-                    class="rounded-lg file-uploader"
-                    @click="
-                      doViaCheckAccess(() => {
-                        loadArcFileHandler(arc);
-                      })
-                    "
-                    :src="`${$store.getters.storage}/${arc.image_path}`"
-                    :lazy-src="`${$store.getters.storage}/previews/lazy.jpg`"
-                    @error="errorLoadArcImg(arc)"
-                    max-width="128"
-                    min-height="46"
-                    :gradient="
-                      hover
-                        ? '0deg, rgba(0,19,26,1) 0%, rgba(0,19,26,0.5511122417717087) 60%, rgba(0,19,26,0.3046136423319328) 100%'
-                        : ''
-                    "
-                  >
-                    <template v-slot:placeholder>
-                      <v-row
-                        class="fill-height ma-0"
-                        align="center"
-                        justify="center"
-                      >
-                        <v-progress-circular
-                          indeterminate
-                          color="grey lighten-5"
-                        ></v-progress-circular>
-                      </v-row> </template
-                  ></v-img>
-                </v-hover>
-              </v-col>
-
               <v-col cols="3" class="text-center">
                 <v-text-field
-                  v-model="arc.name"
+                  v-model="mkr.name"
                   :rules="requireRules"
                   color="#ce6f61"
-                  label="Название"
+                  label="Имя"
                   dark
                 ></v-text-field>
               </v-col>
 
-              <v-col cols="7" class="text-right">
+              <v-col cols="3" class="text-center">
+                <v-text-field
+                  v-model="mkr.password"
+                  :rules="requireRules"
+                  color="#ce6f61"
+                  label="Пароль"
+                  dark
+                  :append-icon="mkr.showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  :type="mkr.showPassword ? 'text' : 'password'"
+                  @click:append="tryShowPasswords(mkr)"
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="2" class="text-center">
+                <v-select
+                  v-model="mkr.role"
+                  :rules="requireRules"
+                  :items="roles"
+                  no-data-text="Ролей нет"
+                  validate-on-blur
+                  filled
+                  open-on-clear
+                  :background-color="
+                    mkr.role == 'maker' ? `#ce7061a1` : `#f0cc6093`
+                  "
+                  color="#ce6f61"
+                  dark
+                  :menu-props="{
+                    offsetY: true,
+                    transition: 'scale-transition',
+                  }"
+                  label="Роль"
+                  item-color="#00131a"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="2" class="text-center">
+                <v-checkbox
+                  v-model="mkr.is_active"
+                  label="Активен"
+                  color="#ce6f61"
+                  dark
+                  class="mt-0"
+                ></v-checkbox>
+              </v-col>
+
+              <v-col cols="2" class="text-right pt-0">
                 <v-btn
                   color="red darken-1"
                   class="ma-2"
@@ -84,7 +86,7 @@
                   fab
                   @click="
                     doViaCheckAccess(() => {
-                      deleteArc(arc);
+                      deleteMkr(mkr);
                     })
                   "
                   ><v-icon>mdi-delete-outline</v-icon></v-btn
@@ -96,7 +98,7 @@
                   fab
                   @click="
                     doViaCheckAccess(() => {
-                      saveArc(arc);
+                      saveMkr(mkr);
                     })
                   "
                   ><v-icon>mdi-content-save </v-icon></v-btn
@@ -110,8 +112,14 @@
 
     <access-checker
       v-model="check"
+      :duration="30000"
       @allowed="allow"
       @denied="deny"
+      @dropSession="
+        () => {
+          hidePasswords();
+        }
+      "
     ></access-checker>
 
     <v-snackbar
@@ -167,85 +175,71 @@
 import AccessChecker from './AccessChecker.vue'
 import AccessCheckerMixin from '../../mixins/AccessCheckerMixin.js'
 export default {
-  name: 'AircompaniesEditor',
+  name: 'MakersEditor',
   components: { AccessChecker },
   mixins: [AccessCheckerMixin],
-  data() {
-    return {
-      aircompanies: [],
+  data: () => ({
+    makers: [],
+    roles: null,
 
-      requireRules: [(v) => !!v || 'Поле обязательно!'],
-      arcUpdateFile: null,
+    requireRules: [(v) => !!v || 'Поле обязательно!'],
 
-      load: false,
-      error: { show: false, message: 'Не удалось выполнить оперцию!' },
-      success: { show: false, message: 'Операция успешно выполнена!' },
-    }
-  },
-
+    load: false,
+    error: { show: false, message: 'Не удалось выполнить оперцию!' },
+    success: { show: false, message: 'Операция успешно выполнена!' },
+  }),
   async mounted() {
     this.load = true
     try {
-      let resp = await this.$axios.get(`/Aircompany/All`)
-      if (resp.data) { this.aircompanies = resp.data }
-
+      let resp = await this.$axios.get(`/Admin/AllMakers`)
+      if (resp.data) {
+        this.makers = resp.data.map(e => {
+          e['showPassword'] = false
+          return e
+        })
+        this.roles = Array.from(new Set(this.makers.map(e => e.role)))
+      }
       else { this.error.show = true }
 
     } catch { this.error.show = true }
     finally { this.load = false }
   },
-
   methods: {
-    errorLoadArcImg(arc) {
-      arc.image_path = `previews/lazy.jpg`
+    tryShowPasswords(mkr) {
+      if (mkr.showPassword) mkr.showPassword = false
+      else this.doViaCheckAccess(() => {
+        mkr.showPassword = true
+      }, () => {
+        mkr.showPassword = false
+      })
     },
-    loadArcFileHandler(arc) {
-      this.arcUpdateFile = arc
-      this.$refs.arcFile.click()
-    },
-    async arcFileUpload() {
-      let formData = new FormData()
-      formData.append('file', this.$refs.arcFile.files[0])
-
-      if (this.$refs.arcFile.files[0]) {
-        this.load = true
-
-        let config = {
-          headers: {
-            'content-type': 'multipart/form-data'
-          }
-        }
-
-        let resp
-        try {
-          resp = await this.$axios.post(`/Aircompany/LoadLogo/${this.arcUpdateFile.id}`, formData, config)
-          if (resp.data) {
-            this.arcUpdateFile.image_path = resp.data
-            this.success.show = true
-          } else {
-            this.error.show = true
-          }
-        } catch { this.error.show = true }
-        finally { this.load = false }
-      }
+    hidePasswords() {
+      this.makers = this.makers.map(e => {
+        e.showPassword = false
+        return e
+      })
     },
 
-    async addArc() {
+
+    async addMkr() {
       this.load = true
 
-      let query = `/Aircompany/Create/`
-      let arc = {
-        name: 'Aircompany',
-        image_path: 'logo'
+      let query = `/Admin/CreateMaker/`
+      let mkr = {
+        name: 'Менеджер',
+        password: '1',
+        role: 'maker',
+        is_active: false,
+        showPassword: true
       }
 
       let resp
       try {
-        resp = await this.$axios.post(query, arc)
+        resp = await this.$axios.post(query, mkr)
 
         if (resp.data) {
-          arc['id'] = resp.data.id
-          this.aircompanies.unshift(arc)
+          mkr['id'] = resp.data.id
+          this.makers.unshift(mkr)
 
           this.success.show = true
         } else {
@@ -256,13 +250,16 @@ export default {
       finally { this.load = false }
     },
 
-    async saveArc(arc) {
-      if (this.$refs.arcForm.validate()) {
+    async saveMkr(mkr) {
+      if (this.$refs.mkrForm.validate()) {
         this.load = true
 
-        let query = `/Aircompany/Update/${arc.id}`
+        let query = `/Admin/UpdateMaker/${mkr.id}`
         let data = {
-          name: arc.name,
+          name: mkr.name,
+          password: mkr.password,
+          role: mkr.role,
+          is_active: mkr.is_active,
         }
 
         let resp
@@ -280,17 +277,17 @@ export default {
       }
     },
 
-    async deleteArc(arc) {
+    async deleteMkr(mkr) {
       this.load = true
 
-      let query = `/Aircompany/Delete/${arc.id}`
+      let query = `/Admin/DeleteMaker/${mkr.id}`
 
       let resp
       try {
         resp = await this.$axios.post(query)
 
         if (resp.data) {
-          this.aircompanies.splice(this.aircompanies.indexOf(arc), 1)
+          this.makers.splice(this.makers.indexOf(mkr), 1)
           this.success.show = true
         } else {
           this.error.show = true
@@ -302,15 +299,11 @@ export default {
 }
 </script>
 
-
 <style scoped>
 .item0 {
   background-color: #2b102b !important;
 }
 .item1 {
   background-color: #0c0d27 !important;
-}
-.file-uploader {
-  cursor: pointer;
 }
 </style>

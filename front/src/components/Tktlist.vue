@@ -57,7 +57,7 @@
       </v-col>
     </v-row>
 
-    <v-row class="transition-row">
+    <v-row>
       <v-col cols="12">
         <transition-group name="tkt-list">
           <ticket
@@ -195,7 +195,7 @@ export default {
       })
     },
 
-    bookTkt(tkt){
+    bookTkt(tkt) {
       this.buy = true
       this.buyTkt = tkt
     },
@@ -233,7 +233,7 @@ export default {
 
 .tkt-list-leave-active {
   opacity: 0;
-  transform: translateX(30px);
+  transform: translateY(30px);
 }
 </style>
 

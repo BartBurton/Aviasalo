@@ -2,7 +2,7 @@
   <div>
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h1 class="text text-color-default">ВХОД</h1>
+        <h1 class="text text-color-default">ВХОД МЕНЕДЖЕРА</h1>
         <v-divider class="mb-16 mt-5" dark></v-divider>
       </v-col>
       <v-col cols="4">
@@ -10,11 +10,11 @@
           <v-row>
             <v-col cols="12">
               <v-text-field
-                v-model="email"
-                :rules="emailRules"
+                v-model="name"
+                :rules="nameRules"
                 dark
                 color="#ce6f61"
-                label="Email"
+                label="Имя"
                 outlined
               ></v-text-field>
             </v-col>
@@ -42,9 +42,6 @@
                     <div></div></div
                 ></span>
               </v-btn>
-            </v-col>
-            <v-col cols="12" class="text-center">
-              <v-btn to="/signup" color="#ce6f61" outlined> Регистрация </v-btn>
             </v-col>
           </v-row>
         </v-form>
@@ -74,30 +71,29 @@
 </template>
 
 <script>
-import authenticator from '../plugins/authanticator'
-
+import authenticator from '../../plugins/authanticator'
 
 export default {
-  name: 'SignInUser',
+  name: 'SignInMaker',
+
   props: {
     next: {
       type: String,
-      default: '/profile',
+      default: '/maker',
     },
   },
   data() {
     return {
-      email: '',
-      emailRules: [
-        (v) => !!v || 'Email обязательно!',
-        (v) => /.+@.+\..+/.test(v) || 'Email некорректный!'
+      name: '',
+      nameRules: [
+        (v) => !!v || 'Имя обязательно!',
       ],
       password: '',
       passwordRules: [(v) => !!v || 'Пароль обязательно!'],
       showPassword: false,
 
       load: false,
-      error: { show: false, message: 'Неверный email или пароль!' },
+      error: { show: false, message: 'Не удалось войти!' },
     }
   },
 
@@ -115,12 +111,12 @@ export default {
       if (this.$refs.signin.validate()) {
         this.load = true
 
-        let isSignIn = await authenticator.signInUser({
-          email: this.email,
+        let success = await authenticator.signInMaker({
+          name: this.name,
           password: this.password
         })
 
-        if (isSignIn) {
+        if (success) {
           this.$router.push(this.next)
         } else {
           this.error.show = true
@@ -130,6 +126,7 @@ export default {
       }
     }
   },
+
 }
 </script>
 

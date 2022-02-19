@@ -22,15 +22,6 @@ class PassangerController extends Controller
         }
     }
 
-    public function signIn($email, $password)
-    {
-        return Passanger
-            ::where('email',    '=', $email)
-            ->where('password', '=', $password)
-            ->first()
-            ->remember_token;
-    }
-
     public function create(Request $request)
     {
         $remember_token = TokenGenerator::generateToken();

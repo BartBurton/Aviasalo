@@ -4,7 +4,7 @@
       <v-container>
         <v-row>
           <v-col>
-            <v-autocomplete
+            <v-combobox
               v-model="departure"
               :rules="departureRules"
               :items="departures"
@@ -19,11 +19,11 @@
               }"
               label="Откуда"
               item-color="#00131a"
-            ></v-autocomplete>
+            ></v-combobox>
           </v-col>
 
           <v-col>
-            <v-autocomplete
+            <v-combobox
               v-model="arrival"
               :rules="arrivalRules"
               :items="arrivals"
@@ -38,7 +38,7 @@
               }"
               label="Куда"
               item-color="#00131a"
-            ></v-autocomplete>
+            ></v-combobox>
           </v-col>
 
           <v-col>

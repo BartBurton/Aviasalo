@@ -1,129 +1,82 @@
 import store from "../store"
 import axios from 'axios'
 
-const USER = { type: 'user', signin: '/signin' }
-const ADMIN = { type: 'admin', signin: '/signin-maker' }
-const MAKER = { type: 'maker', signin: '/signin-maker' }
+const USER = { type: 'auth', query: '/Authenticate/IsUser', signin: '/signin' }
+const ADMIN = { type: 'auth', query: '/Authenticate/IsAdmin', signin: '/signin-admin' }
+const MAKER = { type: 'auth', query: '/Authenticate/IsMaker', signin: '/signin-maker' }
+
+
+async function signIn(query, getter) {
+    try {
+        let token = (await axios.get(query)).data
+
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = token
+            localStorage.Authorization = token
+            localStorage.Get = getter
+
+            let user = (await axios.get(getter)).data
+            store.commit('setUser', user)
+
+            return true
+        }
+    } catch { }
+
+    return false
+}
+
 
 export default {
     user: USER,
     admin: ADMIN,
     maker: MAKER,
 
-
-
-    nextViaCheckAuth: async to => {
-        let token = localStorage.Authorization
-        let next = ''
-        let type = null
-
-        if (to.meta == USER) {
-            next = USER.signin
-            type = 'IsUser'
-        } else if (to.meta == MAKER) {
-            next = MAKER.signin
-            type = 'IsMaker'
-        } else if (to.meta == ADMIN) {
-            next = ADMIN.signin
-            type = 'IsAdmin'
-        } else {
-            return to.path
-        }
-
-        let query = `/Authenticate/${type}`
-        try {
-            let resp = await axios.post(query, { token: token })
-            if (resp.data) {
-                return to.path
+    isAuth: async to => {
+        if (to.meta.type === 'auth') {
+            let token = localStorage.Authorization
+            if (!!token) {
+                try {
+                    return !!(await axios.post(to.meta.query, { token: token })).data
+                } catch {
+                    return false
+                }
             }
-        } catch { }
-        return next
+            return false
+        }
+        return true
     },
 
 
-    setStore: async () => {
+    trySignIn: async () => {
         let token = localStorage.Authorization
-        let type = localStorage.type
-        let user = null;
+        let getter = localStorage.Get
 
-        if (type && token) {
+        if (getter && token) {
             axios.defaults.headers.common['Authorization'] = token
-
             try {
-                if ((await axios.post(`/Authenticate/${type}`, { token: token })).data) {
-                    if (type == 'IsUser') {
-                        user = (await axios.get('/Passanger/Get')).data.passanger
-                    } else if (type == 'IsMaker') {
-                        user = (await axios.get('/Admin/Get')).data
-                    }
-
-                    if (user) {
-                        store.commit('setUser', user)
-                    }
-                }
+                let user = (await axios.get(getter)).data
+                store.commit('setUser', user)
             } catch { }
         }
     },
 
     signUpUser: async user => {
         try {
-            let query = `/Passanger/Create/`
-            let newUser = (await axios.post(query, user)).data
-            let token = newUser.remember_token
-
-            if (token) {
-                axios.defaults.headers.common['Authorization'] = token
-                localStorage.type = 'IsUser'
-                localStorage.Authorization = token
-
-                store.commit('setUser', newUser)
-
-                return true
-            }
+            await axios.post(`/Passanger/Create/`, user)
+            return await signIn(`/Passanger/SignIn/${user.email}/${user.password}`, '/Passanger/Get')
         } catch { }
 
         return false
     },
 
-    signInUser: async user => {
-        try {
-            let query = `/Passanger/SignIn/${user.email}/${user.password}`
-            let token = (await axios.get(query)).data
+    signInUser: async user =>
+        await signIn(`/Passanger/SignIn/${user.email}/${user.password}`, '/Passanger/Get'),
 
-            if (token) {
-                axios.defaults.headers.common['Authorization'] = token
-                localStorage.type = 'IsUser'
-                localStorage.Authorization = token
+    signInMaker: async maker =>
+        await signIn(`/Maker/SignIn/${maker.name}/${maker.password}`, '/Admin/Get'),
 
-                let userData = (await axios.get('/Passanger/Get')).data.passanger
-                store.commit('setUser', userData)
-
-                return true
-            }
-        } catch { }
-
-        return false
-    },
-
-    signInMaker: async maker => {
-        try {
-            let query = `/Maker/SignIn/${maker.name}/${maker.password}`
-            let token = (await axios.get(query)).data
-
-            if (token) {
-                axios.defaults.headers.common['Authorization'] = token
-                localStorage.type = 'IsMaker'
-                localStorage.Authorization = token
-
-                let makerData = (await axios.get('/Admin/Get')).data
-                store.commit('setUser', makerData)
-
-                return true
-            }
-        } catch { }
-
-        return false
-    },
+    signInAdmin: async admin =>
+        await signIn(`/Admin/SignIn/${admin.name}/${admin.password}`, '/Admin/Get'),
 
     signOut: () => {
         localStorage.removeItem('Authorization')

@@ -2,7 +2,7 @@
   <div>
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h1 class="text text-color-default">ВХОД АДМИНА/МЕНЕДЖЕРА</h1>
+        <h1 class="text text-color-default">ВХОД АДМИНА</h1>
         <v-divider class="mb-16 mt-5" dark></v-divider>
       </v-col>
       <v-col cols="4">
@@ -71,15 +71,15 @@
 </template>
 
 <script>
-import authenticator from '../plugins/authanticator'
+import authenticator from '../../plugins/authanticator'
 
 export default {
-  name: 'SignInMaker',
+  name: 'SignInAdmin',
 
   props: {
     next: {
       type: String,
-      default: '/maker',
+      default: '/admin',
     },
   },
   data() {
@@ -111,12 +111,12 @@ export default {
       if (this.$refs.signin.validate()) {
         this.load = true
 
-        let isSignIn = await authenticator.signInMaker({
+        let success = await authenticator.signInAdmin({
           name: this.name,
           password: this.password
         })
 
-        if (isSignIn) {
+        if (success) {
           this.$router.push(this.next)
         } else {
           this.error.show = true

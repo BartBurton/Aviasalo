@@ -2,7 +2,7 @@
   <v-app>
     <v-main class="back-color-default">
       <home-profile></home-profile>
-      <v-container class="py-16 px-0" style="position:relative">
+      <v-container class="py-16 px-0" style="position: relative">
         <transition name="router">
           <router-view />
         </transition>

@@ -15,17 +15,15 @@ class PassangerResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'passanger' => [
-                'id' => $this->id,
-                'name' => $this->name,
-                'surname' => $this->surname,
-                'dob' => $this->dob,
-                'doc' => $this->doc,
-                'email' => $this->email,
-                'password' => $this->password,
-                'remember_token' => $this->remember_token,
-                'avatar_path' => $this->avatar_path
-            ]
+            'id' => $this->id,
+            'name' => $this->name,
+            'surname' => $this->surname,
+            'dob' => $this->dob,
+            'doc' => $this->doc,
+            'email' => $this->email,
+            'password' => $this->password,
+            'remember_token' => $this->remember_token,
+            'avatar_path' => $this->avatar_path
         ];
     }
 }

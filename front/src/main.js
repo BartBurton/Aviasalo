@@ -20,7 +20,7 @@ Vue.use(require('vue-moment'), {
   moment
 })
 
-authenticator.setStore().then(e => {
+authenticator.trySignIn().then(() => {
   new Vue({
     router,
     store,

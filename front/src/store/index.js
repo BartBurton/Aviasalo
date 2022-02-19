@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import AccessCheckerModule from './AccessCheckerModule'
 
 Vue.use(Vuex)
 
@@ -10,15 +11,16 @@ export default new Vuex.Store({
     user: null,
   },
   mutations: {
-    setUser(state, user){
-      state.user = {...user}
+    setUser(state, user) {
+      state.user = { ...user }
     }
   },
   actions: {
   },
   modules: {
+    AccessChecker: AccessCheckerModule
   },
-  getters:{
+  getters: {
     api: state => state.api,
     storage: state => state.storage,
     user: state => state.user

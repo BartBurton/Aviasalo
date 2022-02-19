@@ -1,5 +1,5 @@
 <template>
-  <v-form ref="tktForm">
+  <div>
     <input
       @change="tktFileUpload()"
       type="file"
@@ -50,244 +50,307 @@
       </v-card>
     </v-dialog>
 
-    <v-container class="pa-8">
-      <v-row>
-        <v-col class="text-right">
-          <v-btn color="teal accent-3" small fab @click="addTkt()"
-            ><v-icon>mdi-plus</v-icon></v-btn
-          >
-        </v-col>
-      </v-row>
-      <v-row v-for="(tkt, i) in tickets" :key="`tkt-${i}`">
-        <v-col>
-          <v-card :class="i % 2 == 0 ? 'item0' : 'item1'" class="pa-2">
-            <v-card-title>
-              <v-hover v-slot="{ hover }">
-                <v-img
-                  class="rounded-lg file-uploader"
-                  @click="loadTktFileHandler(tkt)"
-                  :src="`${$store.getters.storage}/${tkt.ticket.preview_img}`"
-                  :lazy-src="`${$store.getters.storage}/previews/lazy.jpg`"
-                  @error="errorLoadTktImg(tkt)"
-                  :gradient="
-                    hover
-                      ? '0deg, rgba(0,19,26,1) 0%, rgba(0,19,26,0.9) 60%, rgba(0,19,26,0.8) 100%'
-                      : '0deg, rgba(0,19,26,1) 0%, rgba(0,19,26,0.5511122417717087) 60%, rgba(0,19,26,0.3046136423319328) 100%'
+    <v-row>
+      <v-col class="text-right">
+        <v-btn
+          color="teal accent-3"
+          small
+          fab
+          @click="
+            doViaCheckAccess(() => {
+              addTkt();
+            })
+          "
+          ><v-icon>mdi-plus</v-icon></v-btn
+        >
+      </v-col>
+    </v-row>
+    <v-row v-for="(tkt, i) in tickets" :key="`tkt-${i}`">
+      <v-col>
+        <v-card :class="i % 2 == 0 ? 'item0' : 'item1'" class="pa-2">
+          <v-card-title>
+            <v-hover v-slot="{ hover }">
+              <v-img
+                class="rounded-lg file-uploader"
+                @click="
+                  doViaCheckAccess(() => {
+                    loadTktFileHandler(tkt);
+                  })
+                "
+                :src="`${$store.getters.storage}/${tkt.ticket.preview_img}`"
+                :lazy-src="`${$store.getters.storage}/previews/lazy.jpg`"
+                @error="errorLoadTktImg(tkt)"
+                :gradient="
+                  hover
+                    ? '0deg, rgba(0,19,26,1) 0%, rgba(0,19,26,0.9) 60%, rgba(0,19,26,0.8) 100%'
+                    : '0deg, rgba(0,19,26,1) 0%, rgba(0,19,26,0.5511122417717087) 60%, rgba(0,19,26,0.3046136423319328) 100%'
+                "
+              >
+                <template v-slot:placeholder>
+                  <v-row
+                    class="fill-height ma-0"
+                    align="center"
+                    justify="center"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="grey lighten-5"
+                    ></v-progress-circular>
+                  </v-row> </template
+              ></v-img>
+            </v-hover>
+          </v-card-title>
+
+          <v-card-text>
+            <v-row v-if="tkt.segments.length == 0">
+              <v-col class="pa-5">
+                <v-btn
+                  color="teal accent-3"
+                  outlined
+                  small
+                  fab
+                  @click="
+                    doViaCheckAccess(() => {
+                      addSegment({ arrival: '', order: -1 }, tkt);
+                    })
                   "
+                  ><v-icon>mdi-plus</v-icon></v-btn
                 >
-                  <template v-slot:placeholder>
-                    <v-row
-                      class="fill-height ma-0"
-                      align="center"
-                      justify="center"
+              </v-col>
+            </v-row>
+            <v-row v-else style="position: relative">
+              <v-col
+                v-for="(seg, j) in tkt.segments"
+                :key="`seg-${j}`"
+                cols="6"
+              >
+                <v-card>
+                  <v-card-title class="pt-2">
+                    <v-btn
+                      v-if="j != 0"
+                      color="light-green accent-2"
+                      outlined
+                      x-small
+                      fab
+                      class="ma-2"
+                      @click="
+                        doViaCheckAccess(() => {
+                          movePrev(seg, tkt);
+                        })
+                      "
+                      ><v-icon>mdi-chevron-left </v-icon></v-btn
                     >
-                      <v-progress-circular
-                        indeterminate
-                        color="grey lighten-5"
-                      ></v-progress-circular>
-                    </v-row> </template
-                ></v-img>
-              </v-hover>
-            </v-card-title>
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      v-if="j != tkt.segments.length - 1"
+                      color="light-green accent-2"
+                      outlined
+                      x-small
+                      fab
+                      class="ma-2"
+                      @click="
+                        doViaCheckAccess(() => {
+                          moveNext(seg, tkt);
+                        })
+                      "
+                      ><v-icon>mdi-chevron-right </v-icon></v-btn
+                    >
+                  </v-card-title>
+                  <v-card-text>
+                    <v-row>
+                      <v-col cols="6">
+                        <v-combobox
+                          v-model="seg.departure"
+                          :rules="requireRules"
+                          :items="cities"
+                          hide-no-data
+                          open-on-clear
+                          color="#ce6f61"
+                          dark
+                          :menu-props="{
+                            offsetY: true,
+                            transition: 'scale-transition',
+                          }"
+                          label="Откуда"
+                          item-color="#00131a"
+                        ></v-combobox>
+                      </v-col>
+                      <v-col cols="6">
+                        <v-combobox
+                          v-model="seg.arrival"
+                          :rules="requireRules"
+                          :items="cities"
+                          hide-no-data
+                          open-on-clear
+                          color="#ce6f61"
+                          dark
+                          :menu-props="{
+                            offsetY: true,
+                            transition: 'scale-transition',
+                          }"
+                          label="Куда"
+                          item-color="#00131a"
+                        ></v-combobox>
+                      </v-col>
+                    </v-row>
+                    <v-row class="py-0">
+                      <v-col cols="6" class="text-center py-0">
+                        <v-chip
+                          link
+                          color="#001118"
+                          @click="openDialogToChangeDate(seg, 'departure')"
+                        >
+                          <span class="body-2 indigo--text text--lighten-4"
+                            >{{ seg.departure_date | flyDate }}&nbsp;
+                          </span>
+                          <span class="body-1 text-color-important">{{
+                            seg.departure_date | flyTime
+                          }}</span></v-chip
+                        >
+                      </v-col>
+                      <v-col cols="6" class="text-center py-0">
+                        <v-chip
+                          link
+                          color="#001118"
+                          @click="openDialogToChangeDate(seg, 'arrival')"
+                        >
+                          <span class="body-2 indigo--text text--lighten-4"
+                            >{{ seg.arrival_date | flyDate }}&nbsp;
+                          </span>
+                          <span class="body-1 text-color-important">{{
+                            seg.arrival_date | flyTime
+                          }}</span></v-chip
+                        >
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                  <v-card-actions>
+                    <v-btn
+                      v-if="tkt.segments.length > 1"
+                      color="red darken-1"
+                      class="ma-2"
+                      outlined
+                      x-small
+                      fab
+                      @click="
+                        doViaCheckAccess(() => {
+                          deleteSegment(seg, tkt);
+                        })
+                      "
+                      ><v-icon>mdi-delete-outline</v-icon></v-btn
+                    >
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      color="teal accent-3"
+                      x-small
+                      fab
+                      class="ma-2"
+                      @click="
+                        doViaCheckAccess(() => {
+                          saveSegment(seg, tkt);
+                        })
+                      "
+                      ><v-icon>mdi-content-save </v-icon></v-btn
+                    >
+                    <v-btn
+                      v-if="j == tkt.segments.length - 1"
+                      color="amber darken-2"
+                      x-small
+                      outlined
+                      fab
+                      class="ma-2"
+                      @click="
+                        doViaCheckAccess(() => {
+                          addSegment(seg, tkt);
+                        })
+                      "
+                      ><v-icon>mdi-plus</v-icon></v-btn
+                    >
+                  </v-card-actions>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-card-text>
 
-            <v-card-text>
-              <v-row v-if="tkt.segments.length == 0">
-                <v-col class="pa-5">
-                  <v-btn
-                    color="teal accent-3"
-                    outlined
-                    small
-                    fab
-                    @click="addSegment({ arrival: '', order: -1 }, tkt)"
-                    ><v-icon>mdi-plus</v-icon></v-btn
-                  >
-                </v-col>
-              </v-row>
-              <v-row v-else style="position: relative">
-                <v-col
-                  v-for="(seg, j) in tkt.segments"
-                  :key="`seg-${j}`"
-                  cols="6"
+          <v-card-actions>
+            <v-row align="center" class="px-5">
+              <v-col cols="3">
+                <v-text-field
+                  v-model="tkt.ticket.price"
+                  :rules="requireRules"
+                  color="#ce6f61"
+                  type="number"
+                  label="Цена"
+                  dark
+                ></v-text-field>
+              </v-col>
+              <v-col cols="2">
+                <v-text-field
+                  v-model="tkt.ticket.count"
+                  :rules="requireRules"
+                  type="number"
+                  color="#ce6f61"
+                  label="Количество мест"
+                  dark
+                ></v-text-field>
+              </v-col>
+              <v-col cols="4">
+                <v-select
+                  v-model="tkt.aircompany.id"
+                  item-text="name"
+                  item-value="id"
+                  :items="aircompanies"
+                  color="#ce6f61"
+                  dark
+                  :menu-props="{
+                    bottom: true,
+                    offsetY: true,
+                    transition: 'scale-transition',
+                    maxHeight: 'auto',
+                  }"
+                  label="Авиакомпания"
+                  item-color="#00131a"
                 >
-                  <v-card>
-                    <v-card-title class="pt-2">
-                      <v-btn
-                        v-if="j != 0"
-                        color="light-green accent-2"
-                        outlined
-                        x-small
-                        fab
-                        class="ma-2"
-                        @click="movePrev(seg, tkt)"
-                        ><v-icon>mdi-chevron-left </v-icon></v-btn
-                      >
-                      <v-spacer></v-spacer>
-                      <v-btn
-                        v-if="j != tkt.segments.length - 1"
-                        color="light-green accent-2"
-                        outlined
-                        x-small
-                        fab
-                        class="ma-2"
-                        @click="moveNext(seg, tkt)"
-                        ><v-icon>mdi-chevron-right </v-icon></v-btn
-                      >
-                    </v-card-title>
-                    <v-card-text>
-                      <v-row>
-                        <v-col cols="6">
-                          <v-text-field
-                            v-model="seg.departure"
-                            :rules="requireRules"
-                            color="#ce6f61"
-                            label="Откуда"
-                            dark
-                          ></v-text-field>
-                        </v-col>
-                        <v-col cols="6">
-                          <v-text-field
-                            v-model="seg.arrival"
-                            :rules="requireRules"
-                            color="#ce6f61"
-                            label="Куда"
-                            dark
-                          ></v-text-field>
-                        </v-col>
-                      </v-row>
-                      <v-row class="py-0">
-                        <v-col cols="6" class="text-center py-0">
-                          <v-chip
-                            link
-                            color="#001118"
-                            @click="openDialogToChangeDate(seg, 'departure')"
-                          >
-                            <span class="body-2 indigo--text text--lighten-4"
-                              >{{ seg.departure_date | flyDate }}&nbsp;
-                            </span>
-                            <span class="body-1 text-color-important">{{
-                              seg.departure_date | flyTime
-                            }}</span></v-chip
-                          >
-                        </v-col>
-                        <v-col cols="6" class="text-center py-0">
-                          <v-chip
-                            link
-                            color="#001118"
-                            @click="openDialogToChangeDate(seg, 'arrival')"
-                          >
-                            <span class="body-2 indigo--text text--lighten-4"
-                              >{{ seg.arrival_date | flyDate }}&nbsp;
-                            </span>
-                            <span class="body-1 text-color-important">{{
-                              seg.arrival_date | flyTime
-                            }}</span></v-chip
-                          >
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                    <v-card-actions>
-                      <v-btn
-                        v-if="tkt.segments.length > 1"
-                        color="red darken-1"
-                        class="ma-2"
-                        outlined
-                        x-small
-                        fab
-                        @click="deleteSegment(seg, tkt)"
-                        ><v-icon>mdi-delete-outline</v-icon></v-btn
-                      >
-                      <v-spacer></v-spacer>
-                      <v-btn
-                        color="teal accent-3"
-                        x-small
-                        fab
-                        class="ma-2"
-                        @click="saveSegment(seg, tkt)"
-                        ><v-icon>mdi-content-save </v-icon></v-btn
-                      >
-                      <v-btn
-                        v-if="j == tkt.segments.length - 1"
-                        color="amber darken-2"
-                        x-small
-                        outlined
-                        fab
-                        class="ma-2"
-                        @click="addSegment(seg, tkt)"
-                        ><v-icon>mdi-plus</v-icon></v-btn
-                      >
-                    </v-card-actions>
-                  </v-card>
-                </v-col>
-              </v-row>
-            </v-card-text>
+                </v-select>
+              </v-col>
+              <v-col class="text-right">
+                <v-btn
+                  color="red darken-1"
+                  class="ma-2"
+                  outlined
+                  x-small
+                  fab
+                  @click="
+                    doViaCheckAccess(() => {
+                      deleteTkt(tkt);
+                    })
+                  "
+                  ><v-icon>mdi-delete-outline</v-icon></v-btn
+                >
+                <v-btn
+                  color="teal accent-3"
+                  class="ma-2"
+                  x-small
+                  fab
+                  @click="
+                    doViaCheckAccess(() => {
+                      saveTkt(tkt);
+                    })
+                  "
+                  ><v-icon>mdi-content-save </v-icon></v-btn
+                >
+              </v-col>
+            </v-row>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
 
-            <v-card-actions>
-              <v-row align="center" class="px-5">
-                <v-col cols="3">
-                  <v-text-field
-                    v-model="tkt.ticket.price"
-                    :rules="requireRules"
-                    color="#ce6f61"
-                    type="number"
-                    label="Цена"
-                    dark
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="2">
-                  <v-text-field
-                    v-model="tkt.ticket.count"
-                    :rules="requireRules"
-                    type="number"
-                    color="#ce6f61"
-                    label="Количество мест"
-                    dark
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="4">
-                  <v-select
-                    v-model="tkt.aircompany.id"
-                    item-text="name"
-                    item-value="id"
-                    :items="aircompanies"
-                    color="#ce6f61"
-                    dark
-                    :menu-props="{
-                      bottom: true,
-                      offsetY: true,
-                      transition: 'scale-transition',
-                      maxHeight: 'auto',
-                    }"
-                    label="Авиакомпания"
-                    item-color="#00131a"
-                  >
-                  </v-select>
-                </v-col>
-                <v-col class="text-right">
-                  <v-btn
-                    v-if="isAdmin"
-                    color="red darken-1"
-                    class="ma-2"
-                    outlined
-                    x-small
-                    fab
-                    @click="deleteTkt(tkt)"
-                    ><v-icon>mdi-delete-outline</v-icon></v-btn
-                  >
-                  <v-btn
-                    color="teal accent-3"
-                    class="ma-2"
-                    x-small
-                    fab
-                    @click="saveTkt(tkt)"
-                    ><v-icon>mdi-content-save </v-icon></v-btn
-                  >
-                </v-col>
-              </v-row>
-            </v-card-actions>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+    <access-checker
+      v-model="check"
+      @allowed="allow"
+      @denied="deny"
+    ></access-checker>
 
     <v-snackbar
       color="#00131a"
@@ -335,22 +398,21 @@
       <v-progress-circular indeterminate color="#ce6f61" size="70">
       </v-progress-circular>
     </v-overlay>
-  </v-form>
+  </div>
 </template>
 
 <script>
 import moment from 'moment'
+import AccessChecker from './AccessChecker.vue'
+import AccessCheckerMixin from '../../mixins/AccessCheckerMixin.js'
 export default {
   name: 'TicketsEditor',
-  props: {
-    isAdmin: {
-      type: Boolean,
-      default: false
-    }
-  },
+  components: { AccessChecker },
+  mixins: [AccessCheckerMixin],
   data() {
     return {
-      tickets: null,
+      tickets: [],
+      cities: [],
       aircompanies: null,
 
       requireRules: [(v) => !!v || 'Поле обязательно!'],
@@ -370,21 +432,35 @@ export default {
 
   async mounted() {
     this.load = true
-
     try {
 
-      let query = `/Aircompany/All`
-      let resp = await this.$axios.get(query)
+      let resp = await this.$axios.get(`/Aircompany/All`)
       if (resp.data) { this.aircompanies = resp.data }
+      else { this.error.show = true }
 
-      query = `/Ticket/All`
-      resp = await this.$axios.get(query)
+      resp = await this.$axios.get(`/Ticket/All`)
       if (resp.data) { this.tickets = resp.data }
+      else { this.error.show = true }
 
-    } catch { }
+    } catch { this.error.show = true }
+    finally { this.load = false }
+  },
 
-
-    this.load = false
+  watch: {
+    tickets: {
+      deep: true,
+      handler() {
+        new Promise(() => {
+          this.cities = []
+          this.tickets.forEach(e => {
+            Array.prototype.push.apply(this.cities,
+              e.segments.filter(s => !this.cities.includes(s.departure) && s.departure.length).map(s => s.departure))
+            Array.prototype.push.apply(this.cities,
+              e.segments.filter(s => !this.cities.includes(s.arrival) && s.arrival.length).map(s => s.arrival))
+          })
+        })
+      }
+    }
   },
 
 
@@ -495,24 +571,22 @@ export default {
       }
     },
     async deleteTkt(tkt) {
-      if (this.$store.getters.user.role == 'admin') {
-        this.load = true
+      this.load = true
 
-        let query = `/Ticket/Delete/${tkt.ticket.id}`
+      let query = `/Ticket/Delete/${tkt.ticket.id}`
 
-        let resp
-        try {
-          resp = await this.$axios.post(query)
+      let resp
+      try {
+        resp = await this.$axios.post(query)
 
-          if (resp.data) {
-            this.tickets.splice(this.tickets.indexOf(tkt), 1)
-            this.success.show = true
-          } else {
-            this.error.show = true
-          }
-        } catch { this.error.show = true }
-        finally { this.load = false }
-      }
+        if (resp.data) {
+          this.tickets.splice(this.tickets.indexOf(tkt), 1)
+          this.success.show = true
+        } else {
+          this.error.show = true
+        }
+      } catch { this.error.show = true }
+      finally { this.load = false }
     },
 
     openDialogToChangeDate(seg, point) {

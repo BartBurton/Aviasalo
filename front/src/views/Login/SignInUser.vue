@@ -2,32 +2,12 @@
   <div>
     <v-row justify="center">
       <v-col cols="12" class="text-center">
-        <h1 class="text text-color-default">РЕГИСТРАЦИЯ</h1>
+        <h1 class="text text-color-default">ВХОД</h1>
         <v-divider class="mb-16 mt-5" dark></v-divider>
       </v-col>
-      <v-col cols="6">
-        <v-form ref="signup" autocomplete="off">
+      <v-col cols="4">
+        <v-form ref="signin">
           <v-row>
-            <v-col cols="6">
-              <v-text-field
-                v-model="name"
-                :rules="nameRules"
-                dark
-                color="#ce6f61"
-                label="Имя"
-                outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                v-model="surname"
-                :rules="surnameRules"
-                dark
-                color="#ce6f61"
-                label="Фамилия"
-                outlined
-              ></v-text-field>
-            </v-col>
             <v-col cols="12">
               <v-text-field
                 v-model="email"
@@ -51,10 +31,9 @@
                 @click:append="showPassword = !showPassword"
               ></v-text-field>
             </v-col>
-
             <v-col cols="12" class="text-center">
-              <v-btn color="#ce6f61" style="color: #00131a" @click="signUp">
-                <span v-if="!load">Зарегистрироваться</span>
+              <v-btn color="#ce6f61" style="color: #00131a" @click="signIn">
+                <span v-if="!load">Войти</span>
                 <span v-else>
                   <div class="lds-ring">
                     <div></div>
@@ -65,7 +44,13 @@
               </v-btn>
             </v-col>
             <v-col cols="12" class="text-center">
-              <v-btn to="/signin" color="#ce6f61" outlined> Войти </v-btn>
+              <v-btn
+                :to="{ name: 'SignUpUser', query: { next: next } }"
+                color="#ce6f61"
+                outlined
+              >
+                Регистрация
+              </v-btn>
             </v-col>
           </v-row>
         </v-form>
@@ -95,10 +80,11 @@
 </template>
 
 <script>
-import authenticator from '../plugins/authanticator'
+import authenticator from '../../plugins/authanticator'
+
 
 export default {
-  name: 'SignUpUser',
+  name: 'SignInUser',
   props: {
     next: {
       type: String,
@@ -107,10 +93,6 @@ export default {
   },
   data() {
     return {
-      name: '',
-      nameRules: [(v) => !!v || 'Имя обязательно!'],
-      surname: '',
-      surnameRules: [(v) => !!v || 'Фамилия обязательна!'],
       email: '',
       emailRules: [
         (v) => !!v || 'Email обязательно!',
@@ -121,7 +103,7 @@ export default {
       showPassword: false,
 
       load: false,
-      error: { show: false, message: 'Не удалось создать учетную запись!' },
+      error: { show: false, message: 'Неверный email или пароль!' },
     }
   },
 
@@ -129,27 +111,22 @@ export default {
     document.addEventListener('keypress', (event) => {
       const keyName = event.key;
       if (keyName == 'Enter') {
-        this.signUp()
+        this.signIn()
       }
     });
   },
 
   methods: {
-    async signUp() {
-      if (this.$refs.signup.validate()) {
+    async signIn() {
+      if (this.$refs.signin.validate()) {
         this.load = true
 
-        let isSignUp = await authenticator.signUpUser({
-          name: this.name,
-          surname: this.surname,
-          dob: '',
-          doc: '',
+        let success = await authenticator.signInUser({
           email: this.email,
-          password: this.password,
-          avatar_path: ''
+          password: this.password
         })
 
-        if (isSignUp) {
+        if (success) {
           this.$router.push(this.next)
         } else {
           this.error.show = true
@@ -159,7 +136,6 @@ export default {
       }
     }
   },
-
 }
 </script>
 

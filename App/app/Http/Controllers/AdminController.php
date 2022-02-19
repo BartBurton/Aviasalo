@@ -24,7 +24,7 @@ class AdminController extends Controller
 
     public function allMakers()
     {
-        return Maker::all();
+        return Maker::all()->sortByDesc('id')->values();
     }
 
     public function getMaker($id)
@@ -48,7 +48,12 @@ class AdminController extends Controller
     public function updateMaker(Request $request, $id)
     {
         $mkr = Maker::find($id);
-        $mkr->update($request->all());
+        $mkr->update([
+            'name'              => $request->name,
+            'password'          => $request->password,
+            'role'              => $request->role,
+            'is_active'         => $request->is_active,
+        ]);
 
         return response('success', 200);
     }

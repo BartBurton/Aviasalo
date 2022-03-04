@@ -1,5 +1,8 @@
 <template>
   <div>
+
+
+
     <v-expansion-panels inset dark multiple>
       <v-expansion-panel
         v-for="(tkt, i) in tickets"
@@ -121,6 +124,7 @@
         </v-expansion-panel-content>
       </v-expansion-panel>
     </v-expansion-panels>
+
 
     <access-checker
       v-model="check"

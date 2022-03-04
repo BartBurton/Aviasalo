@@ -1,114 +1,116 @@
 <template>
   <div>
-    <v-row>
-      <v-col class="text-right">
-        <v-btn
-          color="teal accent-3"
-          small
-          fab
-          @click="
-            doViaCheckAccess(() => {
-              addMkr();
-            })
-          "
-          ><v-icon>mdi-plus</v-icon></v-btn
-        >
-      </v-col>
-    </v-row>
+    <v-form ref="mkrForm">
+      <v-row>
+        <v-col class="text-right">
+          <v-btn
+            color="teal accent-3"
+            small
+            fab
+            @click="
+              doViaCheckAccess(() => {
+                addMkr();
+              })
+            "
+            ><v-icon>mdi-plus</v-icon></v-btn
+          >
+        </v-col>
+      </v-row>
 
-    <v-row v-for="(mkr, i) in makers" :key="`mkr-${i}`">
-      <v-col>
-        <v-card :class="i % 2 == 0 ? 'item0' : 'item1'" class="pa-2">
-          <v-card-title>
-            <v-row align="center">
-              <v-col cols="3" class="text-center">
-                <v-text-field
-                  v-model="mkr.name"
-                  :rules="requireRules"
-                  color="#ce6f61"
-                  label="Имя"
-                  dark
-                ></v-text-field>
-              </v-col>
+      <v-row v-for="(mkr, i) in makers" :key="`mkr-${i}`">
+        <v-col>
+          <v-card :class="i % 2 == 0 ? 'item0' : 'item1'" class="pa-2">
+            <v-card-title>
+              <v-row align="center">
+                <v-col cols="3" class="text-center">
+                  <v-text-field
+                    v-model="mkr.name"
+                    :rules="requireRules"
+                    color="#ce6f61"
+                    label="Имя"
+                    dark
+                  ></v-text-field>
+                </v-col>
 
-              <v-col cols="3" class="text-center">
-                <v-text-field
-                  v-model="mkr.password"
-                  :rules="requireRules"
-                  color="#ce6f61"
-                  label="Пароль"
-                  dark
-                  :append-icon="mkr.showPassword ? 'mdi-eye' : 'mdi-eye-off'"
-                  :type="mkr.showPassword ? 'text' : 'password'"
-                  @click:append="tryShowPasswords(mkr)"
-                ></v-text-field>
-              </v-col>
+                <v-col cols="3" class="text-center">
+                  <v-text-field
+                    v-model="mkr.password"
+                    :rules="requireRules"
+                    color="#ce6f61"
+                    label="Пароль"
+                    dark
+                    :append-icon="mkr.showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                    :type="mkr.showPassword ? 'text' : 'password'"
+                    @click:append="tryShowPasswords(mkr)"
+                  ></v-text-field>
+                </v-col>
 
-              <v-col cols="2" class="text-center">
-                <v-select
-                  v-model="mkr.role"
-                  :rules="requireRules"
-                  :items="roles"
-                  no-data-text="Ролей нет"
-                  validate-on-blur
-                  filled
-                  open-on-clear
-                  :background-color="
-                    mkr.role == 'maker' ? `#ce7061a1` : `#f0cc6093`
-                  "
-                  color="#ce6f61"
-                  dark
-                  :menu-props="{
-                    offsetY: true,
-                    transition: 'scale-transition',
-                  }"
-                  label="Роль"
-                  item-color="#00131a"
-                ></v-select>
-              </v-col>
+                <v-col cols="2" class="text-center">
+                  <v-select
+                    v-model="mkr.role"
+                    :rules="requireRules"
+                    :items="roles"
+                    no-data-text="Ролей нет"
+                    validate-on-blur
+                    filled
+                    open-on-clear
+                    :background-color="
+                      mkr.role == 'maker' ? `#ce7061a1` : `#f0cc6093`
+                    "
+                    color="#ce6f61"
+                    dark
+                    :menu-props="{
+                      offsetY: true,
+                      transition: 'scale-transition',
+                    }"
+                    label="Роль"
+                    item-color="#00131a"
+                  ></v-select>
+                </v-col>
 
-              <v-col cols="2" class="text-center">
-                <v-checkbox
-                  v-model="mkr.is_active"
-                  label="Активен"
-                  color="#ce6f61"
-                  dark
-                  class="mt-0"
-                ></v-checkbox>
-              </v-col>
+                <v-col cols="2" class="text-center">
+                  <v-checkbox
+                    v-model="mkr.is_active"
+                    label="Активен"
+                    color="#ce6f61"
+                    dark
+                    class="mt-0"
+                  ></v-checkbox>
+                </v-col>
 
-              <v-col cols="2" class="text-right pt-0">
-                <v-btn
-                  color="red darken-1"
-                  class="ma-2"
-                  outlined
-                  x-small
-                  fab
-                  @click="
-                    doViaCheckAccess(() => {
-                      deleteMkr(mkr);
-                    })
-                  "
-                  ><v-icon>mdi-delete-outline</v-icon></v-btn
-                >
-                <v-btn
-                  color="teal accent-3"
-                  class="ma-2"
-                  x-small
-                  fab
-                  @click="
-                    doViaCheckAccess(() => {
-                      saveMkr(mkr);
-                    })
-                  "
-                  ><v-icon>mdi-content-save </v-icon></v-btn
-                >
-              </v-col>
-            </v-row>
-          </v-card-title>
-        </v-card>
-      </v-col>
-    </v-row>
+                <v-col cols="2" class="text-right pt-0">
+                  <v-btn
+                    color="red darken-1"
+                    class="ma-2"
+                    outlined
+                    x-small
+                    fab
+                    @click="
+                      doViaCheckAccess(() => {
+                        deleteMkr(mkr);
+                      })
+                    "
+                    ><v-icon>mdi-delete-outline</v-icon></v-btn
+                  >
+                  <v-btn
+                    color="teal accent-3"
+                    class="ma-2"
+                    x-small
+                    fab
+                    @click="
+                      doViaCheckAccess(() => {
+                        saveMkr(mkr);
+                      })
+                    "
+                    ><v-icon>mdi-content-save </v-icon></v-btn
+                  >
+                </v-col>
+              </v-row>
+            </v-card-title>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-form>
 
     <access-checker
       v-model="check"

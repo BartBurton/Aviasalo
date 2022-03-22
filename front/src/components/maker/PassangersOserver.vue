@@ -1,9 +1,16 @@
 <template>
   <div>
+    <v-row v-if="isMounted">
+      <v-col class="text-center pa-16">
+        <v-progress-circular
+          indeterminate
+          color="#ce6f61"
+          size="70"
+        ></v-progress-circular>
+      </v-col>
+    </v-row>
 
-
-
-    <v-expansion-panels inset dark multiple>
+    <v-expansion-panels v-else inset dark multiple>
       <v-expansion-panel
         v-for="(tkt, i) in tickets"
         :key="`tkt-${i}`"
@@ -125,7 +132,6 @@
       </v-expansion-panel>
     </v-expansion-panels>
 
-
     <access-checker
       v-model="check"
       :duration="30000"
@@ -199,12 +205,13 @@ export default {
     tickets: [],
 
     load: false,
+    isMounted: false,
     error: { show: false, message: 'Не удалось выполнить оперцию!' },
     success: { show: false, message: 'Операция успешно выполнена!' },
   }),
 
   async mounted() {
-    this.load = true
+    this.isMounted = true
     try {
       let resp = await this.$axios.get(`/Ticket/All`)
       if (resp.data) {
@@ -218,7 +225,7 @@ export default {
       else { this.error.show = true }
 
     } catch { this.error.show = true }
-    finally { this.load = false }
+    finally { this.isMounted = false }
   },
   methods: {
     initPassangers(e, tkt,) {

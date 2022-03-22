@@ -78,33 +78,30 @@ const routes = [
 
   {
     path: '/maker',
-    redirect: '/maker/tickets-editor',
+    redirect: '/maker/editor',
     name: 'PageMaker',
     component: PageMaker,
     children: [
       {
-        path: 'tickets-editor',
-        name: 'TicketsEditor',
-        component: () => import('../components/maker/TicketsEditor.vue'),
+        path: 'editor',
+        redirect: '/maker/editor/tickets',
+        name: 'Editor',
+        component: () => import('../components/maker/Editor.vue'),
+        children: [
+          {
+            path: 'tickets',
+            name: 'TicketsEditor',
+            component: () => import('../components/maker/TicketsEditor.vue'),
+            meta: authenticator.maker
+          },
+          {
+            path: 'aircompanies',
+            name: 'AircompaniesEditor',
+            component: () => import('../components/maker/AircompaniesEditor.vue'),
+            meta: authenticator.maker
+          },
+        ],
         meta: authenticator.maker
-      },
-      {
-        path: 'aircompanies-editor',
-        name: 'AircompaniesEditor',
-        component: () => import('../components/maker/AircompaniesEditor.vue'),
-        meta: authenticator.maker
-      },
-      {
-        path: 'makers-editor',
-        name: 'MakersEditor',
-        component: () => import('../components/maker/MakersEditor.vue'),
-        meta: authenticator.admin
-      },
-      {
-        path: 'passangers-observer',
-        name: 'PassangersOserver',
-        component: () => import('../components/maker/PassangersOserver.vue'),
-        meta: authenticator.admin
       },
     ],
     meta: authenticator.maker
@@ -112,8 +109,32 @@ const routes = [
 
   {
     path: '/admin',
+    redirect: '/admin/editor',
     name: 'PageAdmin',
     component: PageAdmin,
+    children: [
+      {
+        path: 'editor',
+        redirect: { name: 'MakersEditor' },
+        name: 'Editor',
+        component: () => import('../components/maker/Editor.vue'),
+        children: [
+          {
+            path: 'makers',
+            name: 'MakersEditor',
+            component: () => import('../components/maker/MakersEditor.vue'),
+            meta: authenticator.admin
+          },
+          {
+            path: 'passangers',
+            name: 'PassangersOserver',
+            component: () => import('../components/maker/PassangersOserver.vue'),
+            meta: authenticator.admin
+          },
+        ],
+        meta: authenticator.admin
+      },
+    ],
     meta: authenticator.admin
   },
 ]

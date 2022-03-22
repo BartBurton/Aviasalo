@@ -25,10 +25,12 @@ class TicketController extends Controller
         $allowed = [];
 
         foreach ($tkts as $tkt) {
+            $sgmts = $tkt->segments->sortBy('order')->values();
+
             if (
                 $tkt->count > 0
-                and $tkt->segments->first()->departure == $departure
-                and $tkt->segments->last()->arrival == $arrival
+                and $sgmts->first()->departure == $departure
+                and $sgmts->last()->arrival == $arrival
                 and str_contains($tkt->segments->first()->departure_date, $date)
             ) {
                 array_push($allowed, $tkt);
@@ -51,8 +53,9 @@ class TicketController extends Controller
 
         foreach ($tkts as $tkt) {
             if ($tkt->segments->count() > 0) {
-                array_push($departures, $tkt->segments->first()->departure);
-                array_push($arrivals, $tkt->segments->last()->arrival);
+                $sgmts = $tkt->segments->sortBy('order')->values();
+                array_push($departures, $sgmts->first()->departure);
+                array_push($arrivals, $sgmts->last()->arrival);
             }
         }
 

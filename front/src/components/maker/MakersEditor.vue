@@ -1,6 +1,16 @@
 <template>
   <div>
-    <v-form ref="mkrForm">
+    <v-row v-if="isMounted">
+      <v-col class="text-center pa-16">
+        <v-progress-circular
+          indeterminate
+          color="#ce6f61"
+          size="70"
+        ></v-progress-circular>
+      </v-col>
+    </v-row>
+
+    <v-form v-else ref="mkrForm">
       <v-row>
         <v-col class="text-right">
           <v-btn
@@ -187,11 +197,12 @@ export default {
     requireRules: [(v) => !!v || 'Поле обязательно!'],
 
     load: false,
+    isMounted: false,
     error: { show: false, message: 'Не удалось выполнить оперцию!' },
     success: { show: false, message: 'Операция успешно выполнена!' },
   }),
   async mounted() {
-    this.load = true
+    this.isMounted = true
     try {
       let resp = await this.$axios.get(`/Admin/AllMakers`)
       if (resp.data) {
@@ -204,7 +215,7 @@ export default {
       else { this.error.show = true }
 
     } catch { this.error.show = true }
-    finally { this.load = false }
+    finally { this.isMounted = false }
   },
   methods: {
     tryShowPasswords(mkr) {

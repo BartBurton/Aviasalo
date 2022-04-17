@@ -225,11 +225,8 @@ export default {
 
       if (resp.data) {
         this.tkts = resp.data
-      } else {
-        this.error.show = true
-      }
-
-    } catch { this.error.show = true }
+      } 
+    } 
     finally { this.load = false }
   },
 

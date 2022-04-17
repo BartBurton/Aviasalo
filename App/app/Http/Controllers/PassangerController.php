@@ -2,110 +2,120 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Passanger;
 use App\Http\Resources\PassangerResource;
 use Illuminate\Http\Request;
 use App\Exceptions\TokenGenerator;
+use App\Http\Resources\ClientResource;
 use App\Http\Resources\TicketResource;
+use App\Models\Client;
+use App\Models\User;
 
 class PassangerController extends Controller
 {
     public function get(Request $request)
     {
         $token = $request->header('Authorization');
-        $pass = Passanger::where('remember_token', '=', $token)->first();
+        $usr = User::where('remember_token', '=', $token)->first();
 
-        if ($pass) {
-            return new PassangerResource($pass);
-        } else {
-            return response('forbiden', 403);
+        if ($usr) {
+            $clt = $usr->clients->first();
+            if ($clt) {
+                return new ClientResource($clt);
+            }
         }
+
+        return response('forbidden', 403);
     }
 
     public function create(Request $request)
     {
-        $remember_token = TokenGenerator::generateToken();
-        $pass = Passanger::where('email', '=', $request->email)->first();
+        $clt = Client::where('email', '=', $request->email)->first();
 
-        if (!$pass) {
-            return Passanger::create([
+        if (!$clt) {
+            $remember_token = TokenGenerator::generateToken();
+
+            $usr = User::create([
                 'name'              => $request->name,
+                'password'          => $request->password,
+                'remember_token'    => $remember_token,
+            ]);
+
+
+            $clt = Client::create([
                 'surname'           => $request->surname,
                 'dob'               => $request->dob,
                 'doc'               => $request->doc,
                 'email'             => $request->email,
-                'password'          => $request->password,
-                'remember_token'    => $remember_token,
-                'avatar_path'       => 'avatars/default.jpg'
+                'avatar_path'       => 'avatars/default.jpg',
+                'user_id'           => $usr->id
             ]);
-        } else {
-            return response('forbiden', 403);
+
+            return new ClientResource($clt);
         }
+        return response('forbidden', 403);
     }
 
     public function update(Request $request, $id)
     {
         $token = $request->header('Authorization');
-        $pass = Passanger::find($id);
+        $clt = Client::find($id);
 
-        if ($pass->remember_token == $token) {
-            $pass->update([
+
+        if ($clt->user->remember_token == $token) {
+            $usr = User::find($clt->user->id);
+            $usr->update([
                 'name'      => $request->name,
+                'password'  => $request->password,
+            ]);
+            
+            $clt->update([
                 'surname'   => $request->surname,
                 'dob'       => $request->dob,
                 'doc'       => $request->doc,
                 'email'     => $request->email,
-                'password'  => $request->password
             ]);
 
-            return response('success', 200);
-        } else {
-            return response('forbiden', 403);
+            return new ClientResource(Client::find($id));
         }
+        return response('forbidden', 403);
     }
 
     public function delete(Request $request, $id)
     {
         $token = $request->header('Authorization');
-        $pass = Passanger::find($id);
-
-        if ($pass->remember_token == $token) {
-            if ($pass->avatar_path && $pass->avatar_path !== 'avatars/default.jpg') {
-                if (file_exists($pass->avatar_path)) {
-                    unlink(public_path($pass->avatar_path));
+        $clt = Client::find($id);
+        if ($clt->user->remember_token == $token) {
+            if ($clt->avatar_path && $clt->avatar_path !== 'avatars/default.jpg') {
+                if (file_exists($clt->avatar_path)) {
+                    unlink(public_path($clt->avatar_path));
                 }
             }
-
-            Passanger::destroy($id);
-
+            User::destroy($clt->user->id);
             return response('success', 200);
-        } else {
-            return response('forbiden', 403);
         }
+        return response('forbidden', 403);
     }
 
     public function tickets(Request $request, $id)
     {
         $token = $request->header('Authorization');
-        $pass = Passanger::find($id);
+        $usr = User::find(Client::find($id)->user->id);
 
-        if ($pass->remember_token == $token) {
-            return TicketResource::collection($pass->tickets);
+        if ($usr->remember_token == $token) {
+            return TicketResource::collection($usr->tickets);
         } else {
-            return response('forbiden', 403);
+            return response('forbidden', 403);
         }
     }
 
     public function loadAvatar(Request $request, $id)
     {
         $token = $request->header('Authorization');
-        $pass = Passanger::find($id);
-
-        if ($pass->remember_token == $token) {
-
-            if ($pass->avatar_path && $pass->avatar_path !== 'avatars/default.jpg') {
-                if (file_exists($pass->avatar_path)) {
-                    unlink(public_path($pass->avatar_path));
+        $clt = Client::find($id);
+        if ($clt->user->remember_token == $token) {
+            if ($clt->avatar_path && $clt->avatar_path !== 'avatars/default.jpg') {
+                if (file_exists($clt->avatar_path)) {
+                    unlink(public_path($clt->avatar_path));
                 }
             }
 
@@ -113,13 +123,12 @@ class PassangerController extends Controller
             $generated_new_name = TokenGenerator::generateToken() . '.' . $request->file->getClientOriginalExtension();
             $request->file->move($upload_path, $generated_new_name);
 
-            $pass->update([
+            $clt->update([
                 'avatar_path'  => 'avatars/' . $generated_new_name
             ]);
 
             return 'avatars/' . $generated_new_name;
-        } else {
-            return response('forbiden', 403);
         }
+        return response('forbidden', 403);
     }
 }

@@ -11,7 +11,7 @@ use App\Http\Controllers\AuthenticateController;
 
 use App\Http\Middleware\PrivateMiddleware;
 use App\Http\Middleware\AdminMiddleware;
-use App\Http\Middleware\UserMiddlware;
+use App\Http\Middleware\UserMiddleware;
 
 use Illuminate\Support\Facades\Route;
 
@@ -33,7 +33,7 @@ Route::post('/Authenticate/IsAdmin', [AuthenticateController::class, 'isAdmin'])
 Route::post('/Passanger/Create', [PassangerController::class, 'create']);
 Route::get('/Passanger/SignIn/{email}/{password}', [SignInController::class, 'signInUser']);
 
-Route::middleware([UserMiddlware::class])->group(function () {
+Route::middleware([UserMiddleware::class])->group(function () {
     Route::get('/Passanger/Get', [PassangerController::class, 'get']);
     Route::get('/Passanger/Tickets/{id}', [PassangerController::class, 'tickets']);
     Route::post('/Passanger/LoadAvatar/{id}', [PassangerController::class, 'loadAvatar']);

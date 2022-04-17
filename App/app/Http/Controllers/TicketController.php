@@ -4,10 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Http\Resources\TicketResource;
-use App\Models\Maker;
 use Illuminate\Http\Request;
 use App\Exceptions\TokenGenerator;
-use App\Models\TicketPassanger;
+use App\Models\BookingTransaction;
 
 class TicketController extends Controller
 {
@@ -41,7 +40,10 @@ class TicketController extends Controller
     }
 
     public function passangers($id) {
-        return TicketPassanger::all()->where('ticket_id', '=', $id);
+        return BookingTransaction::all()
+            ->where('ticket_id', '=', $id)
+            ->where('is_closed', '=', 1)
+            ->values();
     }
 
     public function cities()

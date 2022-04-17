@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Maker extends Model
+class Role extends Model
 {
     use HasFactory;
 
-    protected $table = "makers";
+    protected $table = "roles";
     protected $guarded = [];
     public $timestamps = false;
 }

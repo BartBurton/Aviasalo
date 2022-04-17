@@ -3,64 +3,90 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Maker;
+use App\Models\User;
+use App\Models\Employer;
+use App\Models\Role;
+use App\Models\Client;
 use App\Exceptions\TokenGenerator;
-use App\Models\Passanger;
-use App\Http\Resources\PassangerResource;
+use App\Http\Resources\ClientResource;
+use App\Http\Resources\EmployerResource;
 
 class AdminController extends Controller
 {
     public function get(Request $request)
     {
         $token = $request->header('Authorization');
-        $mkr = Maker::where('remember_token', '=', $token)->first();
+        $usr = User::where('remember_token', '=', $token)->first();
 
-        if ($mkr) {
-            return $mkr;
-        } else {
-            return response('forbiden', 403);
+        if ($usr) {
+            $emp = $usr->employers->first();
+            if ($emp) {
+                return new EmployerResource($emp);
+            }
         }
+        return response('forbidden', 403);
     }
 
     public function allMakers()
     {
-        return Maker::all()->sortByDesc('id')->values();
+        return EmployerResource::collection(Employer::all()->sortByDesc('id')->values());
     }
 
     public function getMaker($id)
     {
-        return Maker::find($id);
+        $emp = Employer::find($id);
+        return new EmployerResource($emp);
     }
 
     public function createMaker(Request $request)
     {
         $remember_token = TokenGenerator::generateToken();
 
-        return Maker::create([
+        $usr = User::create([
             'name'              => $request->name,
             'password'          => $request->password,
-            'role'              => $request->role,
-            'is_active'         => false,
             'remember_token'    => $remember_token,
         ]);
+
+        $role_name = $request->role;
+        $role = Role::where('name', '=', $role_name)->first();
+
+        $emp = Employer::create([
+            'is_active'     => $request->is_active,
+            'role_id'       => $role->id,
+            'user_id'       => $usr->id
+        ]);
+
+        return new EmployerResource($emp);
     }
 
     public function updateMaker(Request $request, $id)
     {
-        $mkr = Maker::find($id);
-        $mkr->update([
-            'name'              => $request->name,
-            'password'          => $request->password,
-            'role'              => $request->role,
-            'is_active'         => $request->is_active,
+        $emp = Employer::find($id);
+
+        $role_name = $request->role;
+        $role = Role::where('name', '=', $role_name)->first();
+
+        $usr = User::find($emp->user->id);
+
+        $usr->update([
+            'name'      => $request->name,
+            'password'  => $request->password,
         ]);
 
-        return response('success', 200);
+        $emp->update([
+            'is_active'     => $request->is_active,
+            'role_id'       => $role->id,
+        ]);
+
+        return new EmployerResource(Employer::find($id));
     }
 
     public function deleteMaker($id)
     {
-        Maker::destroy($id);
+        $emp = Employer::find($id);
+
+        User::destroy($emp->user->id);
 
         return response('success', 200);
     }
@@ -69,26 +95,48 @@ class AdminController extends Controller
 
     public function allPassangers()
     {
-        return PassangerResource::collection(Passanger::all());
+        return ClientResource::collection(Client::all());
     }
 
-    public function getPassanger(Request $request, $id)
+    public function getPassanger($id)
     {
-        return new PassangerResource(Passanger::find($id));
+        return new ClientResource(Client::find($id));
     }
 
-    public function updatePassanger(Request $request, $id)
-    {
-        $pass = Passanger::find($id);
-        $pass->update($request->all());
+    public function updatePassanger(Request $request, $id) {
+        $clt = Client::find($id);
 
-        return response('success', 200);
+        if ($clt) {
+            $usr = User::find($clt->user->id);
+            $usr->update([
+                'name'      => $request->name,
+                'password'  => $request->password,
+            ]);
+
+            $clt->update([
+                'surname'   => $request->surname,
+                'dob'       => $request->dob,
+                'doc'       => $request->doc,
+                'email'     => $request->email,
+            ]);
+
+            return new ClientResource(Client::find($id));
+        }
+        return response('forbidden', 403);
     }
 
     public function deletePassanger($id)
     {
-        Passanger::destroy($id);
-
-        return response('success', 200);
+        $clt = Client::find($id);
+        if ($clt) {
+            if ($clt->avatar_path && $clt->avatar_path !== 'avatars/default.jpg') {
+                if (file_exists($clt->avatar_path)) {
+                    unlink(public_path($clt->avatar_path));
+                }
+            }
+            User::destroy($clt->user->id);
+            return response('success', 200);
+        }
+        return response('forbidden', 403);
     }
 }

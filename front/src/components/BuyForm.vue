@@ -234,6 +234,13 @@ export default {
 
         try {
           let query = `/Booking/Create`
+          
+          if(this.$store.getters.user !== null && this.$store.getters.user.role === undefined)
+          {
+            this.user['id'] = this.$store.getters.user.id
+          }
+          console.log(this.user)
+          
           let data = {
             ticket_id: this.tkt.ticket.id,
             passanger: this.user
@@ -246,7 +253,7 @@ export default {
             data = {
               ticket_id: resp.data.ticket_id,
               email: resp.data.email,
-              booking_token: resp.data.booking_token,
+              booking_token: resp.data.transaction_token,
             }
 
             resp = await this.$axios.post(query, data)

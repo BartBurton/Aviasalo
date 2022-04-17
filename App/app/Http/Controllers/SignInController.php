@@ -1,39 +1,47 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Models\Maker;
-use App\Models\Passanger;
-
+use App\Models\User;
+use App\Models\Client;
 class SignInController extends Controller
 {
     public function signInUser($email, $password)
     {
-        return Passanger
-            ::where('email',    '=', $email)
-            ->where('password', '=', $password)
-            ->first()
-            ->remember_token;
+        $clt = Client::where('email', '=', $email)->first();
+        if($clt && $clt->user->password == $password)
+        {
+            return $clt->user->remember_token;
+        }
+        return response('forbidden', 403);
     }
 
     public function signInMaker($name, $password)
     {
-        return Maker
-            ::where('name',     '=', $name)
-            ->where('password', '=', $password)
-            ->where('is_active', '=', true)
-            ->first()
-            ->remember_token;
+        $usr = User::where('password', '=', $password)->first();
+        if($usr)
+        {
+            $emp = $usr->employers->first();
+
+            if($emp && $emp->is_active && $emp->user->name == $name)
+            {
+                return $usr->remember_token;
+            }
+        }
+        return response('forbidden', 403);
     }
 
     public function signInAdmin($name, $password)
     {
-        return Maker
-            ::where('name',     '=', $name)
-            ->where('password', '=', $password)
-            ->where('role',     '=', 'admin')
-            ->where('is_active', '=', true)
-            ->first()
-            ->remember_token;
+        $usr = User::where('password', '=', $password)->first();
+        if($usr)
+        {
+            $emp = $usr->employers->first();
+
+            if($emp && $emp->is_active && $emp->role->name == 'admin' && $emp->user->name == $name)
+            {
+                return $usr->remember_token;
+            }
+        }
+        return response('forbidden', 403);
     }
 }

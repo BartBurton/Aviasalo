@@ -115,7 +115,7 @@ const routes = [
     children: [
       {
         path: 'editor',
-        redirect: { name: 'MakersEditor' },
+        redirect: { name: 'TicketsEditor' },
         name: 'Editor',
         component: () => import('../components/maker/Editor.vue'),
         children: [

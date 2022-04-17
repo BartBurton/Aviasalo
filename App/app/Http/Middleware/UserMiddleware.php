@@ -6,15 +6,15 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\User;
 
-class PrivateMiddleware
+class UserMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
         $token = $request->header('Authorization');
         if ($token) {
-            $emp = User::where('remember_token', '=', $token)->first()->employers->first();
+            $clt = User::where('remember_token', '=', $token)->first()->clients->first();
 
-            if (!!$emp && $emp->is_active) {
+            if (!!$clt) {
                 return $next($request);
             }
         }

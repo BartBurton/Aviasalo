@@ -238,7 +238,10 @@ export default {
 
           try {
             let resp = await this.$axios.get(`/Ticket/Passangers/${tkt.ticket.id}`)
-            if (resp.data) { tkt.passangers = resp.data }
+            if (resp.data) {
+              tkt.passangers = resp.data
+              console.log(tkt.passangers)
+            }
             else { this.error.show = true }
           } catch { this.error.show = true }
           finally { tkt.load = false }

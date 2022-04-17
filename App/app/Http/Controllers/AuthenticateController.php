@@ -3,32 +3,33 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Passanger;
-use App\Models\Maker;
+use App\Models\User;
+use App\Models\Employer;
+use App\Models\Role;
+use App\Models\Client;
 
 class AuthenticateController extends Controller
 {
     public function isUser(Request $request)
     {
         $token = $request->token;
-        $pass = Passanger::where('remember_token', '=', $token)->first();
+        $clt = User::where('remember_token', '=', $token)->first()->clients->first();
 
-        return !!$pass && !!$pass->password;
+        return !!$clt;
     }
 
     public function isMaker(Request $request)
     {
         $token = $request->token;
-        $pass = Maker::where('remember_token', '=', $token)->first();
-
-        return !!$pass && $pass->is_active;
+        $emp = User::where('remember_token', '=', $token)->first()->employers->first();
+        
+        return !!$emp && $emp->is_active;
     }
 
     public function isAdmin(Request $request)
     {
         $token = $request->token;
-        $pass = Maker::where('remember_token', '=', $token)->first();
-
-        return !!$pass && $pass->role == 'admin' && $pass->is_active;
+        $emp = User::where('remember_token', '=', $token)->first()->employers->first();
+        return !!$emp && $emp->is_active && $emp->role->name == 'admin';
     }
 }
